@@ -19,26 +19,22 @@ jobs:
         with:
           node-version: 20
 
-      - name: Initialize Package If Missing
-        run: |
-          if [ ! -f package.json ]; then
-            npm init -y
-          fi
+      - name: Initialize Package
+        run: npm init -y
 
       - name: Install Dependencies
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
+        run: npm install @capacitor/core @capacitor/cli @capacitor/ios
 
-      - name: Create Web Directory If Missing
+      - name: Locate and Prepare Web Assets
         run: |
           mkdir -p www
-          cp index.html www/ 2>/dev/null || true
-          cp -r src www/ 2>/dev/null || true
-          cp metadata.json www/ 2>/dev/null || true
+          # Find where index.html is located dynamically
+          TARGET_DIR=$(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/.*" | head -n 1 | xargs dirname)
+          echo "Found web assets folder at: $TARGET_DIR"
+          cp -r $TARGET_DIR/* www/
 
       - name: Initialize Capacitor Project
-        run: |
-          npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=www
+        run: npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=www
 
       - name: Add iOS Platform
         run: npx cap add ios
@@ -61,4 +57,3 @@ jobs:
         with:
           name: Campus-Planner-Unsigned-IPA
           path: ios/App/CampusPlanner.ipa
-
