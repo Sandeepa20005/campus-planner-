@@ -1,4 +1,4 @@
-name: Build Unsigned iOS IPA
+name: Build Unsigned iOS IPA with Production Build
 
 on:
   push:
@@ -18,19 +18,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Initialize Package
-        run: npm init -y
+      - name: Install All Dependencies (Including TS)
+        run: npm install
+
+      - name: Compile TypeScript & Create Production Build
+        run: |
+          # Run the build script defined in your package.json (Vite/React/etc.)
+          npm run build --if-present
+          
+          # If build folder is created as 'dist' or 'build', rename/copy to 'www'
+          if [ -d "dist" ]; then
+            mv dist www
+          elif [ -d "build" ]; then
+            mv build www
+          fi
+          
+          # Fallback check to ensure 'www' folder exists with index.html
+          if [ ! -d "www" ] || [ ! -f "www/index.html" ]; then
+            echo "Production build failed or index.html not found in www/dist/build!"
+            exit 1
+          fi
 
       - name: Install Specific Capacitor Version
         run: npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/ios@6
-
-      - name: Locate and Prepare Web Assets
-        run: |
-          mkdir -p www
-          TARGET_DIR=$(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/.*" | head -n 1 | xargs dirname)
-          echo "Found web assets folder at: $TARGET_DIR"
-          cp -r $TARGET_DIR/* www/
 
       - name: Initialize Capacitor Project
         run: npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=www
@@ -38,7 +50,7 @@ jobs:
       - name: Add iOS Platform
         run: npx cap add ios
 
-      - name: Sync Web Code to iOS Shell
+      - name: Sync Production Compiled Code to iOS Shell
         run: npx cap sync ios
 
       - name: Build Unsigned IPA via Xcode
