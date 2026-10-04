@@ -17,17 +17,28 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-size: 20
-          cache: 'npm'
+          node-version: 20
+
+      - name: Initialize Package If Missing
+        run: |
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
 
       - name: Install Dependencies
         run: |
-          npm install
           npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+      - name: Create Web Directory If Missing
+        run: |
+          mkdir -p www
+          cp index.html www/ 2>/dev/null || true
+          cp -r src www/ 2>/dev/null || true
+          cp metadata.json www/ 2>/dev/null || true
 
       - name: Initialize Capacitor Project
         run: |
-          npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=.
+          npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=www
 
       - name: Add iOS Platform
         run: npx cap add ios
@@ -40,7 +51,6 @@ jobs:
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -allowProvisioningUpdates CODE_SIGNING_ALLOWED=NO OBJROOT=$PWD/build SYMROOT=$PWD/build
           
-          # Create IPA folder structure manually for Unsigned
           mkdir -p build/Release-iphoneos/Payload
           mv build/Release-iphoneos/App.app build/Release-iphoneos/Payload/
           cd build/Release-iphoneos
@@ -51,3 +61,4 @@ jobs:
         with:
           name: Campus-Planner-Unsigned-IPA
           path: ios/App/CampusPlanner.ipa
+
