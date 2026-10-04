@@ -1,0 +1,53 @@
+name: Build Unsigned iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build iOS Artifact
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+      - name: Initialize Capacitor Project
+        run: |
+          npx cap init "Campus Planner" "com.campus.studyplanner" --web-dir=.
+
+      - name: Add iOS Platform
+        run: npx cap add ios
+
+      - name: Sync Web Code to iOS Shell
+        run: npx cap sync ios
+
+      - name: Build Unsigned IPA via Xcode
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -allowProvisioningUpdates CODE_SIGNING_ALLOWED=NO OBJROOT=$PWD/build SYMROOT=$PWD/build
+          
+          # Create IPA folder structure manually for Unsigned
+          mkdir -p build/Release-iphoneos/Payload
+          mv build/Release-iphoneos/App.app build/Release-iphoneos/Payload/
+          cd build/Release-iphoneos
+          zip -r ../../CampusPlanner.ipa Payload
+
+      - name: Upload Unsigned IPA as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Campus-Planner-Unsigned-IPA
+          path: ios/App/CampusPlanner.ipa
