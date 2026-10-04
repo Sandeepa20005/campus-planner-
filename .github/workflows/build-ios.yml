@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build iOS Artifact
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: Checkout repository
@@ -22,13 +22,12 @@ jobs:
       - name: Initialize Package
         run: npm init -y
 
-      - name: Install Dependencies
-        run: npm install @capacitor/core @capacitor/cli @capacitor/ios
+      - name: Install Specific Capacitor Version
+        run: npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/ios@6
 
       - name: Locate and Prepare Web Assets
         run: |
           mkdir -p www
-          # Find where index.html is located dynamically
           TARGET_DIR=$(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/.*" | head -n 1 | xargs dirname)
           echo "Found web assets folder at: $TARGET_DIR"
           cp -r $TARGET_DIR/* www/
