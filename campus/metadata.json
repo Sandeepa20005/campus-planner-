@@ -1,0 +1,7 @@
+{
+  "name": "Campus & Study Planner - Neon Academic Suite",
+  "description": "A modern, highly interactive Campus and Study Planning Web App optimized for iPhone with fluid neon lighting animations, automatic dark mode, interactive study calendar, upcoming priorities planner, productivity tracker, and performance analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
